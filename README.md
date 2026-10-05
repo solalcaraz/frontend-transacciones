@@ -72,8 +72,11 @@ Este repositorio es un fork de **[IlledNacu/frontend-transacciones](https://gith
 
 **Mi parte en la versión original**:
 
-- Participé en la definición de la idea del proyecto.
-- Hice el gráfico de dispersión de clientes del dashboard: ubica a cada cliente según su monto promedio y el tiempo entre sus transacciones, y usa Isolation Forest para resaltar a los que se salen de lo común.
+- Participé en la definición de la idea del proyecto y en la limpieza del dataset.
+- Armé consultas de la API (endpoints) junto con otros dos compañeros.
+- Hice el gráfico de dispersión de clientes sospechosos del dashboard: ubica a cada cliente según su monto promedio y el tiempo entre sus transacciones, y usa Isolation Forest para resaltar a los que se salen de lo común.
+- Hice las pantallas paginadas de clientes y de cajeros, y la de tipos de transacción.
+- Hice las correcciones finales para que se mostraran todas las transacciones y todos los clientes: las listas quedaban cortadas y no se veía el total.
 
 **Lo que hice después en este fork**:
 
