@@ -35,21 +35,17 @@ En el equipo decidimos que cada tabla trajera todos los registros en un solo ped
 
 Las decisiones que tomé y por qué:
 
-- **Juntar el código repetido en `comun.js` y `tabla.js`.** La tabla con búsqueda y paginación estaba copiada igual en cajeros, clientes y transacciones, y funciones como `escapeHtml` o `showError` estaban en casi todas las páginas. Ahora cada página solo define sus columnas y sus acciones.
+- **Juntar el código repetido en `comun.js`, `tabla.js` y `menu.js`.** La tabla con búsqueda y paginación estaba copiada igual en cajeros, clientes y transacciones, funciones como `escapeHtml` o `showError` estaban en casi todas las páginas y el menú lateral se repetía en las siete. Ahora cada página solo define sus columnas y sus acciones.
 - **Dejar aparte la paginación de reportes.** Tiene otro diseño (botones Anterior y Siguiente, 10 por página), y unificarla habría cambiado la interfaz.
 - **Seguir sin build ni módulos.** Los scripts se cargan con `<script>` comunes, como antes, así que el front sigue funcionando con cualquier servidor estático.
 
 ## Cómo correrlo
 
-Primero tiene que estar corriendo la API: los pasos están en [transacciones-db-api](https://github.com/solalcaraz/transacciones-db-api#cómo-correrlo). Después, en otra terminal:
+Con la [API](https://github.com/solalcaraz/transacciones-db-api#cómo-correrlo) corriendo, alcanza con servir esta carpeta en el puerto 5500 y abrir http://127.0.0.1:5500:
 
 ```bash
-git clone https://github.com/solalcaraz/frontend-transacciones.git
-cd frontend-transacciones
 python -m http.server 5500
 ```
-
-Y abrí http://127.0.0.1:5500. Tiene que ser el puerto 5500 porque es el único origen que la API acepta por CORS (Live Server de VS Code usa ese puerto por defecto).
 
 ## Qué aprendí y qué mejoraría
 
@@ -61,8 +57,6 @@ Y abrí http://127.0.0.1:5500. Tiene que ser el puerto 5500 porque es el único 
 **Qué mejoraría**
 
 - **No traer todas las transacciones de una vez.** La tabla de transacciones descarga unos 26 MB de JSON al abrirse. Con un endpoint de búsqueda en la API, el front podría pedir solo la página que muestra.
-- **Sacar la URL de la API del código.** Hoy está fija en `comun.js` y apunta a `127.0.0.1:8000`.
-- **No repetir el menú lateral.** Está copiado en las siete páginas.
 
 ## Autoría y mejoras
 
@@ -80,11 +74,12 @@ Este repositorio es un fork de **[IlledNacu/frontend-transacciones](https://gith
 
 **Lo que hice después en este fork**:
 
-- Corregí el manejo de errores del dashboard: cuando fallaban las estadísticas, el código escribía en un elemento que no existía, una tarjeta quedaba con el spinner y el gráfico no se cargaba.
-- Reemplacé los datos de ejemplo inventados (cajeros en Madrid, clientes "Juan Pérez") que aparecían cuando la API no respondía por un mensaje de error.
-- Corregí la descarga de cajeros, que no leía bien el total de `/count` y pedía siempre 1000 registros.
-- Saqué la paginación de tipos de transacción, que con 4 filas solo mostraba un botón "1" sin función.
-- Junté el código repetido en `comun.js` y `tabla.js`, y renombré `main.js` a `dashboard.js`, que era lo único que contenía.
+- Corregí los errores que encontré al usarlo:
+  - Si fallaban las estadísticas, el dashboard escribía en un elemento que no existía, una tarjeta quedaba con el spinner y el gráfico no se cargaba.
+  - Cuando la API no respondía, las páginas mostraban datos de ejemplo inventados (cajeros en Madrid, clientes "Juan Pérez"); ahora muestran un mensaje de error.
+  - La pantalla de cajeros no leía bien el total de `/count` y pedía siempre 1000 registros.
+  - La pantalla de tipos de transacción mostraba un botón de paginación "1" sin función.
+- Junté el código repetido en `comun.js`, `tabla.js` y `menu.js`, y renombré `main.js` a `dashboard.js`, que era lo único que contenía.
 - Reemplacé el CSS copiado en cada página por `styles.css` y eliminé las clases que no se usaban.
 - Eliminé el código comentado y los comentarios que solo repetían el código.
 - Grabé la demo y reescribí este README.
