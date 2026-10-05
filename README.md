@@ -68,7 +68,12 @@ Y abrí http://127.0.0.1:5500. Tiene que ser el puerto 5500 porque es el único 
 
 Este repositorio es un fork de **[IlledNacu/frontend-transacciones](https://github.com/IlledNacu/frontend-transacciones)**, el trabajo práctico que hicimos en equipo entre septiembre y noviembre de 2025. El tag [`tp-original-2025`](https://github.com/solalcaraz/frontend-transacciones/tree/tp-original-2025) marca el TP tal como lo entregamos. El backend tiene su propio fork: [solalcaraz/transacciones-db-api](https://github.com/solalcaraz/transacciones-db-api).
 
-**Equipo:** NOMBRE_PENDIENTE, Illed Nacucchio, Damian Palomba, Lorenzo Graizzaro, Luis Mazo y Santiago Rodriguez Spina.
+**Equipo:** María Sol Alcaraz, Illed Nacucchio, Damián Palomba, Lorenzo Graizzaro, Luis Mazo y Santiago Rodríguez Spina.
+
+**Mi parte en la versión original**:
+
+- Participé en la definición de la idea del proyecto.
+- Hice el gráfico de dispersión de clientes del dashboard: ubica a cada cliente según su monto promedio y el tiempo entre sus transacciones, y usa Isolation Forest para resaltar a los que se salen de lo común.
 
 **Lo que hice después en este fork**:
 
