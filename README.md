@@ -47,6 +47,8 @@ Con la [API](https://github.com/solalcaraz/transacciones-db-api#cómo-correrlo) 
 python -m http.server 5500
 ```
 
+Si la API corre en otra dirección, se cambia en `config.js`.
+
 ## Qué aprendí y qué mejoraría
 
 **Qué aprendí**
@@ -80,6 +82,7 @@ Este repositorio es un fork de **[IlledNacu/frontend-transacciones](https://gith
   - La pantalla de cajeros no leía bien el total de `/count` y pedía siempre 1000 registros.
   - La pantalla de tipos de transacción mostraba un botón de paginación "1" sin función.
 - Junté el código repetido en `comun.js`, `tabla.js` y `menu.js`, y renombré `main.js` a `dashboard.js`, que era lo único que contenía.
+- Pasé la URL de la API a `config.js`, para cambiarla en un solo lugar.
 - Reemplacé el CSS copiado en cada página por `styles.css` y eliminé las clases que no se usaban.
 - Eliminé el código comentado y los comentarios que solo repetían el código.
 - Grabé la demo y reescribí este README.
