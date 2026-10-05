@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Reporte de Clientes Sospechosos</title>
+    <title>Detector de anomalías | Reporte de clientes sospechosos</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" />
     <link rel="stylesheet" href="styles.css" />
@@ -26,22 +26,22 @@
               >
             </li>
             <li class="nav-item">
-              <a class="nav-link" href="/transacciones.html"
+              <a class="nav-link" href="transacciones.html"
                 ><i class="bi bi-cash-coin"></i> Transacciones</a
               >
             </li>
             <li class="nav-item">
-              <a class="nav-link" href="/clientes.html"
+              <a class="nav-link" href="clientes.html"
                 ><i class="bi bi-people"></i> Clientes</a
               >
             </li>
             <li class="nav-item">
-              <a class="nav-link" href="/cajeros.html"
+              <a class="nav-link" href="cajeros.html"
                 ><i class="bi bi-device-ssd"></i> Cajeros</a
               >
             </li>
             <li class="nav-item">
-              <a class="nav-link" href="/tipos_transacciones.html"
+              <a class="nav-link" href="tipos_transacciones.html"
                 ><i class="bi bi-wallet"></i> Tipos de transacciones</a
               >
             </li>
@@ -129,380 +129,160 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-
+    <script src="comun.js"></script>
     <script>
-      // Configuración de la API
-      const API_BASE_URL = "http://127.0.0.1:8000/anomalias";
-      const API_CLIENTES = "/clientes_sospechosos";
-      const API_TRANSACCIONES_CLIENTE = "/transacciones_por_cliente";
+      const CLIENTES_POR_PAGINA = 10;
 
-      // LÍMITES
-      const DISPLAY_LIMIT = 10;
+      let clientesSospechosos = [];
+      let clientesFiltrados = [];
+      let paginaActual = 1;
 
-      // ESTADO GLOBAL
-      let allSuspiciousClients = [];
-      let currentClientesPage = 1;
-
-      // Variables para búsqueda en frontend
-      let filteredClients = [];
-      let isDataLoadedClientes = false;
-
-      // Función para cargar todos los clientes sospechosos
-      async function loadAllClientes() {
-        if (isDataLoadedClientes) return;
-
+      async function cargarClientesSospechosos() {
         try {
-          const url = `${API_BASE_URL}${API_CLIENTES}`;
-          const response = await fetch(url);
-
-          if (!response.ok) {
-            throw new Error(
-              `Error al cargar datos: ${response.status} ${response.statusText}`
-            );
-          }
-
-          allSuspiciousClients = await response.json();
-          filteredClients = [...allSuspiciousClients];
-          isDataLoadedClientes = true;
-
-          console.log(
-            `✅ Cargados ${allSuspiciousClients.length} clientes sospechosos en memoria`
-          );
-
-          // Renderizar la tabla
-          renderClientesTableAndPagination();
+          const response = await fetch(`${API_URL}/anomalias/clientes_sospechosos`);
+          if (!response.ok) throw new Error(`Error al cargar datos: ${response.status} ${response.statusText}`);
+          clientesSospechosos = await response.json();
         } catch (error) {
           console.error("Error cargando clientes:", error);
-          showError(
-            "No se pudieron cargar los clientes sospechosos. Verifique la conexión con el servidor."
-          );
-
-          // Mostrar datos de ejemplo en caso de error
-          allSuspiciousClients = getSampleClientes();
-          filteredClients = [...allSuspiciousClients];
-          isDataLoadedClientes = true;
-          renderClientesTableAndPagination();
+          showError("No se pudieron cargar los clientes sospechosos. Verifique la conexión con el servidor.");
+          clientesSospechosos = [];
         }
+        clientesFiltrados = [...clientesSospechosos];
+        renderClientes();
       }
 
-      // Datos de ejemplo para clientes (MANTENIDA)
-      function getSampleClientes() {
-        return [
-          {
-            id_cliente: "C001",
-            nombre: "Juan",
-            apellido: "Pérez",
-            sospechoso_por: [
-              "Múltiples transacciones sospechosas",
-              "Patrón de actividad inusual",
-            ],
-          },
-          {
-            id_cliente: "C002",
-            nombre: "María",
-            apellido: "González",
-            sospechoso_por: ["Frecuencia de transacciones anómala"],
-          },
-          {
-            id_cliente: "C003",
-            nombre: "Carlos",
-            apellido: "López",
-            sospechoso_por: [
-              "Ubicaciones inconsistentes",
-              "Horarios inusuales",
-            ],
-          },
-          {
-            id_cliente: "C004",
-            nombre: "Ana",
-            apellido: "Martínez",
-            sospechoso_por: [
-              "Monto total elevado",
-              "Comportamiento reciente cambiante",
-            ],
-          },
-        ];
-      }
+      function buscarClientes() {
+        const consulta = document.getElementById("searchInputClientes").value.trim().toLowerCase();
+        const info = document.getElementById("searchInfoClientes");
 
-      // Búsqueda en clientes
-      function performSearchClientes() {
-        const searchQuery = document
-          .getElementById("searchInputClientes")
-          .value.trim()
-          .toLowerCase();
-
-        if (!searchQuery) {
-          filteredClients = [...allSuspiciousClients];
-          document.getElementById("searchInfoClientes").innerHTML = "";
+        if (!consulta) {
+          clientesFiltrados = [...clientesSospechosos];
+          info.innerHTML = "";
         } else {
-          filteredClients = allSuspiciousClients.filter((cliente) => {
-            return (
-              cliente.id_cliente.toLowerCase().includes(searchQuery) ||
-              (cliente.nombre &&
-                cliente.nombre.toLowerCase().includes(searchQuery)) ||
-              (cliente.apellido &&
-                cliente.apellido.toLowerCase().includes(searchQuery)) ||
-              (cliente.sospechoso_por &&
-                cliente.sospechoso_por.some((motivo) =>
-                  motivo.toLowerCase().includes(searchQuery)
-                ))
-            );
-          });
-
-          document.getElementById(
-            "searchInfoClientes"
-          ).innerHTML = `<i class="bi bi-info-circle"></i> Encontrados <strong>${
-            filteredClients.length
-          }</strong> cliente(s) sospechoso(s) para "<strong>${escapeHtml(
-            searchQuery
-          )}</strong>"`;
+          clientesFiltrados = clientesSospechosos.filter(
+            (c) =>
+              c.id_cliente.toLowerCase().includes(consulta) ||
+              c.nombre?.toLowerCase().includes(consulta) ||
+              c.apellido?.toLowerCase().includes(consulta) ||
+              c.sospechoso_por?.some((motivo) => motivo.toLowerCase().includes(consulta))
+          );
+          info.innerHTML = `<i class="bi bi-info-circle"></i> Encontrados <strong>${clientesFiltrados.length}</strong> cliente(s) sospechoso(s) para "<strong>${escapeHtml(consulta)}</strong>"`;
         }
 
-        currentClientesPage = 1;
-        renderClientesTableAndPagination();
+        paginaActual = 1;
+        renderClientes();
       }
 
-      // Limpiar búsqueda de clientes
-      function clearSearchClientes() {
+      function limpiarBusqueda() {
         document.getElementById("searchInputClientes").value = "";
-        performSearchClientes();
+        buscarClientes();
       }
 
-      // Renderizar tabla de clientes con paginación
-      function renderClientesTableAndPagination() {
-        const totalClientes = filteredClients.length;
-        const totalDisplayPages = Math.ceil(totalClientes / DISPLAY_LIMIT);
+      function renderClientes() {
+        const total = clientesFiltrados.length;
+        const tbody = document.getElementById("clientes-tbody");
 
-        if (totalClientes === 0) {
-          const tbody = document.getElementById("clientes-tbody");
+        if (total === 0) {
           tbody.innerHTML = `<tr><td colspan="4" class="text-center text-secondary py-4">No se encontraron clientes sospechosos.</td></tr>`;
           document.getElementById("clientes-pagination").innerHTML = "";
-          document.getElementById(
-            "clientes-pagination-info"
-          ).textContent = `Mostrando 0 resultados`;
+          document.getElementById("clientes-pagination-info").textContent = "Mostrando 0 resultados";
           return;
         }
 
-        const start = (currentClientesPage - 1) * DISPLAY_LIMIT;
-        const end = start + DISPLAY_LIMIT;
-        const clientesToShow = filteredClients.slice(start, end);
-
-        renderClientesTable(clientesToShow, start);
-        renderClientesPagination(totalClientes, totalDisplayPages);
+        const inicio = (paginaActual - 1) * CLIENTES_POR_PAGINA;
+        tbody.innerHTML = clientesFiltrados
+          .slice(inicio, inicio + CLIENTES_POR_PAGINA)
+          .map((c, i) => filaCliente(c, inicio + i + 1))
+          .join("");
+        renderPaginacion(total, Math.ceil(total / CLIENTES_POR_PAGINA));
       }
 
-      // Renderizar tabla de clientes
-      function renderClientesTable(clients, startOffset) {
-        const tbody = document.getElementById("clientes-tbody");
-        tbody.innerHTML = "";
-
-        clients.forEach((c, index) => {
-          const absoluteIndex = startOffset + index + 1;
-
-          // Creamos la URL para la nueva página de detalle
-          const detailUrl = `transacciones_cliente.html?id_cliente=${c.id_cliente}&nombre=${c.nombre}&apellido=${c.apellido}`; // <-- NUEVA URL
-          
-          const row = `
-                    <tr>
-                        <td>${absoluteIndex}</td>
-                        <td class="small fw-bold">${escapeHtml(
-                          c.id_cliente
-                        )}</td>
-                        <td>${escapeHtml(c.nombre)} ${escapeHtml(
-            c.apellido
-          )}</td>
-              <td>
-                  <ul class="list-unstyled mb-0 small">
-                      ${c.sospechoso_por
-                        .map(
-                          (m) =>
-                            `<li><i class="bi bi-dot"></i> ${escapeHtml(
-                              m
-                            )}</li>`
-                        )
-                        .join("")}
-                  </ul>
-              </td>
-              <td><a class="icon-link icon-link-hover text-success" 
-                  href="${detailUrl}"
-                  title="Ver todas las transacciones de este cliente y el detalle de anomalías">
+      function filaCliente(c, indice) {
+        // El nombre viaja en la URL para mostrarlo en el detalle sin pedir de nuevo el cliente a la API.
+        const params = new URLSearchParams({ id_cliente: c.id_cliente, nombre: c.nombre, apellido: c.apellido });
+        return `
+          <tr>
+            <td>${indice}</td>
+            <td class="small fw-bold">${escapeHtml(c.id_cliente)}</td>
+            <td>${escapeHtml(c.nombre)} ${escapeHtml(c.apellido)}</td>
+            <td>
+              <ul class="list-unstyled mb-0 small">
+                ${c.sospechoso_por.map((m) => `<li><i class="bi bi-dot"></i> ${escapeHtml(m)}</li>`).join("")}
+              </ul>
+            </td>
+            <td>
+              <a class="icon-link icon-link-hover text-success" href="transacciones_cliente.html?${params}"
+                 title="Ver todas las transacciones de este cliente y el detalle de anomalías">
                 Ver transacciones del cliente
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-right" viewBox="0 0 16 16">
                   <path fill-rule="evenodd" d="M1 8a.5.5 0 0 1 .5-.5h11.793l-3.147-3.146a.5.5 0 0 1 .708-.708l4 4a.5.5 0 0 1 0 .708l-4 4a.5.5 0 0 1-.708-.708L13.293 8.5H1.5A.5.5 0 0 1 1 8"/>
                 </svg>
-                </a>
-              </td>
-          </tr>
-          `;
-          tbody.insertAdjacentHTML("beforeend", row);
-        });
+              </a>
+            </td>
+          </tr>`;
       }
 
-      // Renderizar paginación de clientes
-      function renderClientesPagination(totalClientes, totalDisplayPages) {
+      function renderPaginacion(total, totalPaginas) {
         const paginationEl = document.getElementById("clientes-pagination");
-        const paginationInfoEl = document.getElementById(
-          "clientes-pagination-info"
-        );
         paginationEl.innerHTML = "";
 
-        const startDisplay = (currentClientesPage - 1) * DISPLAY_LIMIT + 1;
-        const endDisplay = Math.min(
-          startDisplay + DISPLAY_LIMIT - 1,
-          totalClientes
-        );
-        paginationInfoEl.textContent = `Mostrando clientes ${startDisplay}-${endDisplay} de ${totalClientes}`;
+        const desdeItem = (paginaActual - 1) * CLIENTES_POR_PAGINA + 1;
+        const hastaItem = Math.min(desdeItem + CLIENTES_POR_PAGINA - 1, total);
+        document.getElementById("clientes-pagination-info").textContent = `Mostrando clientes ${desdeItem}-${hastaItem} de ${total}`;
 
-        if (totalDisplayPages <= 1) {
-          return;
-        }
+        if (totalPaginas <= 1) return;
 
-        const createPageItem = (
-          text,
-          page,
-          isActive = false,
-          isDisabled = false
-        ) => {
+        const item = (texto, pagina, activo = false, deshabilitado = false) => {
           const li = document.createElement("li");
-          li.className = `page-item ${isActive ? "active" : ""} ${
-            isDisabled ? "disabled" : ""
-          }`;
-
+          li.className = `page-item ${activo ? "active" : ""} ${deshabilitado ? "disabled" : ""}`;
           const a = document.createElement("a");
           a.href = "#";
           a.className = "page-link";
-          a.textContent = text;
-          a.setAttribute("data-page", page);
-
-          if (!isDisabled) {
+          a.textContent = texto;
+          if (!deshabilitado) {
             a.addEventListener("click", (e) => {
               e.preventDefault();
-              const newPage = parseInt(e.target.getAttribute("data-page"));
-              if (newPage !== currentClientesPage) {
-                currentClientesPage = newPage;
-                renderClientesTableAndPagination();
+              if (pagina !== paginaActual) {
+                paginaActual = pagina;
+                renderClientes();
               }
             });
           }
-
           li.appendChild(a);
           return li;
         };
 
-        // Botón Anterior
-        paginationEl.appendChild(
-          createPageItem(
-            "Anterior",
-            currentClientesPage - 1,
-            false,
-            currentClientesPage === 1
-          )
-        );
-
-        // Paginación de 5 botones centrada
-        let startPage = Math.max(1, currentClientesPage - 2);
-        let endPage = Math.min(totalDisplayPages, currentClientesPage + 2);
-
-        if (currentClientesPage <= 3) {
-          endPage = Math.min(totalDisplayPages, 5);
-          startPage = 1;
-        } else if (currentClientesPage > totalDisplayPages - 3) {
-          startPage = Math.max(1, totalDisplayPages - 4);
-          endPage = totalDisplayPages;
+        // Muestra 5 páginas centradas en la actual, corridas al principio o al final cuando no entran.
+        let desde = Math.max(1, paginaActual - 2);
+        let hasta = Math.min(totalPaginas, paginaActual + 2);
+        if (paginaActual <= 3) {
+          desde = 1;
+          hasta = Math.min(totalPaginas, 5);
+        } else if (paginaActual > totalPaginas - 3) {
+          desde = Math.max(1, totalPaginas - 4);
+          hasta = totalPaginas;
         }
 
-        for (let i = startPage; i <= endPage; i++) {
-          paginationEl.appendChild(
-            createPageItem(i, i, i === currentClientesPage)
-          );
+        paginationEl.appendChild(item("Anterior", paginaActual - 1, false, paginaActual === 1));
+        for (let i = desde; i <= hasta; i++) {
+          paginationEl.appendChild(item(i, i, i === paginaActual));
         }
-
-        // Botón Siguiente
-        paginationEl.appendChild(
-          createPageItem(
-            "Siguiente",
-            currentClientesPage + 1,
-            false,
-            currentClientesPage === totalDisplayPages
-          )
-        );
+        paginationEl.appendChild(item("Siguiente", paginaActual + 1, false, paginaActual === totalPaginas));
       }
 
-      // Funciones de utilidad (Mantener)
-      function formatDateTime(dateTimeString) {
-        const options = {
-          year: "numeric",
-          month: "short",
-          day: "numeric",
-          hour: "2-digit",
-          minute: "2-digit",
-        };
-        const date = new Date(Date.parse(dateTimeString));
-        return date.toLocaleDateString("es-ES", options);
-      }
+      const searchInput = document.getElementById("searchInputClientes");
+      searchInput.addEventListener("keyup", (e) => {
+        if (e.key === "Enter") buscarClientes();
+        if (e.key === "Escape") limpiarBusqueda();
+      });
+      document.getElementById("btnLimpiarClientes").addEventListener("click", limpiarBusqueda);
+      let timeoutBusqueda;
+      searchInput.addEventListener("input", () => {
+        clearTimeout(timeoutBusqueda);
+        timeoutBusqueda = setTimeout(buscarClientes, 400);
+      });
 
-      function escapeHtml(text) {
-        if (text === null || text === undefined) return "";
-        const div = document.createElement("div");
-        div.textContent = text;
-        return div.innerHTML;
-      }
-
-      function showError(message) {
-        const existingAlerts = document.querySelectorAll(".alert");
-        existingAlerts.forEach((alert) => alert.remove());
-
-        const alert = document.createElement("div");
-        alert.className = "alert alert-danger alert-dismissible fade show";
-        alert.innerHTML = `
-                <i class="bi bi-exclamation-triangle"></i> ${message}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            `;
-        const main = document.querySelector("main");
-        const firstCard = main.querySelector(".card");
-        main.insertBefore(alert, firstCard);
-        setTimeout(() => {
-          if (alert.parentNode) {
-            alert.remove();
-          }
-        }, 8000);
-      }
-
-      // Inicializar listeners
-      function initViewListeners() {
-        // Event listeners para búsqueda de clientes
-        document
-          .getElementById("searchInputClientes")
-          .addEventListener("keyup", (e) => {
-            if (e.key === "Enter") {
-              performSearchClientes();
-            }
-            if (e.key === "Escape") {
-              clearSearchClientes();
-            }
-          });
-
-        document
-          .getElementById("btnLimpiarClientes")
-          .addEventListener("click", clearSearchClientes);
-
-        // Búsqueda en tiempo real con debounce
-        let searchTimeoutClientes;
-        document
-          .getElementById("searchInputClientes")
-          .addEventListener("input", () => {
-            clearTimeout(searchTimeoutClientes);
-            searchTimeoutClientes = setTimeout(() => {
-              performSearchClientes();
-            }, 400);
-          });
-      }
-
-      // Inicialización de la aplicación
-      window.onload = () => {
-        initViewListeners();
-        loadAllClientes();
-      };
+      cargarClientesSospechosos();
     </script>
   </body>
 </html>
